@@ -1,4 +1,4 @@
-name: build pipeline for react application
+name: React Static CI
 
 on:
   push:
