@@ -27,7 +27,7 @@ jobs:
         run: sudo rm -rf /var/www/react-app/*
 
       - name: Deploy build files
-        run: sudo cp -r dist/* /var/www/react-app/
+        run: sudo cp -r build/* /var/www/react-app/
 
       - name: Set correct permissions
         run: sudo chown -R www-data:www-data /var/www/react-app
