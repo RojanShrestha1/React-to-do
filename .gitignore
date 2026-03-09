@@ -21,3 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+.github/workflows/build-react.yml
+.github/workflows/singlepage-cicd.yml
+.github/workflows/deploy.yml
+

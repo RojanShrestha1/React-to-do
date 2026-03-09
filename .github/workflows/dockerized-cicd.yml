@@ -1,7 +1,9 @@
 name: CI Build Pipeline
 
 on:
- workflow_dispatch:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -32,7 +34,7 @@ jobs:
 
 
     steps:
-    - name: Deploy container locally
+    - name: Deploy container locallyy
       run: |
         docker pull ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest
         docker stop cicd-demo || true
