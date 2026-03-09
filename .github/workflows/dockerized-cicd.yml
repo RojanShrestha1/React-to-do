@@ -2,11 +2,11 @@ name: CI Build Pipeline
 
 on:
  workflow_dispatch:
- 
-jobs: 
+
+jobs:
   build:
-    runs-on: self-hosted
-    
+    runs-on: React
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,21 +25,20 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/cicd-demo:${{ github.sha }}
-
-   deploy:
-    runs-on: self-hosted
+  deploy:
+    runs-on: React
     needs: build
     if: github.ref == 'refs/heads/main'
 
+
     steps:
-      - name: Deploy to prod server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/cicd-demo:${{ github.sha }}
-            docker stop cicd-demo || true
-            docker rm cicd-demo || true
-            docker run -d -p 3000:3000 --name cicd-demo ${{ secrets.DOCKER_USERNAME }}/cicd-demo:${{ github.sha }}
+      - name: Deploy container locally
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest
+          docker stop cicd-demo || true
+          docker rm cicd-demo || true
+          docker run -d --name cicd-demo -p 3002:80 \ --restart unless-stopped \ ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest:${ github.sha }
+
+
+
+
