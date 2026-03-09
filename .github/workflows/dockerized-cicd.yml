@@ -34,10 +34,10 @@ jobs:
     steps:
       - name: Deploy container locally
         run: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/cicd-demo:${{ github.sha }}
           docker stop cicd-demo || true
           docker rm cicd-demo || true
-          docker run -d --name cicd-demo -p 3002:80 \ --restart unless-stopped \ ${{ secrets.DOCKER_USERNAME }}/cicd-demo:latest:${ github.sha }
+          docker run -d --name cicd-demo -p 3002:80 \ --restart unless-stopped \ ${{ secrets.DOCKER_USERNAME }}/cicd-demo:${{ github.sha }}
 
 
 
