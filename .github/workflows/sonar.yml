@@ -5,12 +5,15 @@ on:
 
 jobs:
   build:
-    runs-on: React
+    # 'self-hosted' tells GitHub to use your Mac, not their cloud VMs
+    # 'macOS' ensures it only picks your Mac if you have multiple runners
+    runs-on: [self-hosted, macOS] 
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,9 +24,10 @@ jobs:
         run: npm install
 
       - name: Run SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # This works ONLY if SonarQube is running on this specific Mac
           SONAR_HOST_URL: http://localhost:9000
         with:
           args: >
