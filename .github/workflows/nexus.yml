@@ -1,0 +1,77 @@
+name: React Static CI
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+         CI: false
+
+      - name: Package build
+        run: |
+          zip -r react-build-${{ github.sha }}.zip build
+
+      - name: Upload to Nexus
+        run: |
+          curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
+          --upload-file react-build-${{ github.sha }}.zip \
+          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip   
+         
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+         name: cicd-react-app-production-${{ github.sha }}
+         path: build
+
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+
+      - name: Download artifact from Nexus
+        run: |
+          curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
+          -o react-build.zip \
+          http://localhost:8081/repository/react-builds/react-build-${{ github.event.workflow_run.head_sha }}.zip
+
+      - name: Extract artifact
+        run: |
+         unzip react-build.zip
+         la -lah
+
+      # - name: Ensure target directory exists
+      #   run: sudo mkdir -p /var/www/react-app
+
+      # - name: Clean old deployment
+      #   run: sudo rm -rf /var/www/react-app/*
+
+      # - name: Deploy build files
+      #   run: sudo cp -r build/* /var/www/react-app/
+
+      # - name: Set correct permissions
+      #   run: sudo chown -R www-data:www-data /var/www/react-app
+
+      # - name: Reload NGINX
+      #   run: sudo systemctl reload nginx
+
+
+         
