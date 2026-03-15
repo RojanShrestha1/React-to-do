@@ -4,12 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
     runs-on: [self-hosted, macOS, react-2-do]
-
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -20,69 +17,53 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci --verbose
+        run: npm ci
 
       - name: Build React App
         run: npm run build
         env:
           CI: false
 
-      - name: Package build
+      - name: Package build (Contents only)
+        # We 'cd' into build so the zip doesn't contain a top-level 'build/' folder
         run: |
-          zip -r react-build-${{ github.sha }}.zip build
-
-      - name: Debug URL
-        run: |
-         echo "Nexus URL: ${{ secrets.NEXUS_URL }}"
+          cd build && zip -r ../react-build-${{ github.sha }}.zip .
 
       - name: Upload to Nexus
         run: |
-          curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
+          curl -v -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
           --upload-file react-build-${{ github.sha }}.zip \
-          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip
+          ${{ secrets.NEXUS_URL }}/react-build-${{ github.sha }}.zip
 
-      - name: Upload build artifact (GitHub)
+      - name: Upload build artifact (GitHub backup)
         uses: actions/upload-artifact@v4
         with:
           name: react-build-${{ github.sha }}
           path: build
 
-
   deploy:
     runs-on: self-hosted
     needs: build
-
     steps:
-
       - name: Download artifact from Nexus
         run: |
           curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
           -o react-build.zip \
-          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip
+          ${{ secrets.NEXUS_URL }}/react-build-${{ github.sha }}.zip
 
-
-      - name: Check downloaded file
-        run: |
-          ls -lah 
-          file react-build.zip
-          head react-build.zip
-
-      - name: Extract artifact
-        run: |
-          unzip react-build.zip
-          ls -lah
-
-    #   - name: Ensure deployment directory exists
-    #     run: sudo mkdir -p /var/www/react-app
-
-    #   - name: Clean old deployment
-    #     run: sudo rm -rf /var/www/react-app/*
-
-    #   - name: Deploy build files
-    #     run: sudo cp -r build/* /var/www/react-app/
-
-    #   - name: Set correct permissions
-    #     run: sudo chown -R www-data:www-data /var/www/react-app
-
-    #   - name: Reload NGINX
-    #     run: sudo systemctl reload nginx
+    #   - name: Clean and Deploy
+    #     run: |
+    #       # 1. Create directory if missing
+    #       sudo mkdir -p /var/www/react-app
+          
+    #       # 2. Clear old files
+    #       sudo rm -rf /var/www/react-app/*
+          
+    #       # 3. Extract new files directly into target
+    #       sudo unzip react-build.zip -d /var/www/react-app/
+          
+    #       # 4. Fix permissions for Nginx
+    #       sudo chown -R www-data:www-data /var/www/react-app
+          
+    #       # 5. Reload Nginx
+    #       sudo systemctl reload nginx
