@@ -52,19 +52,19 @@ jobs:
           -o react-build.zip \
           ${{ secrets.NEXUS_URL }}/react-build-${{ github.sha }}.zip
 
-      - name: Clean and Deploy to Nginx
-        run: |
-          # Create directory if it doesn't exist
-          sudo mkdir -p /var/www/react-app
+    #   - name: Clean and Deploy to Nginx
+    #     run: |
+    #       # Create directory if it doesn't exist
+    #       sudo mkdir -p /var/www/react-app
           
-          # Remove old files to ensure a clean slate
-          sudo rm -rf /var/www/react-app/*
+    #       # Remove old files to ensure a clean slate
+    #       sudo rm -rf /var/www/react-app/*
           
-          # Extract zip directly into the target folder
-          sudo unzip react-build.zip -d /var/www/react-app/
+    #       # Extract zip directly into the target folder
+    #       sudo unzip react-build.zip -d /var/www/react-app/
           
-          # Fix ownership for the web server (Nginx usually runs as www-data)
-          sudo chown -R www-data:www-data /var/www/react-app
+    #       # Fix ownership for the web server (Nginx usually runs as www-data)
+    #       sudo chown -R www-data:www-data /var/www/react-app
           
-          # Reload Nginx to apply changes
-          sudo systemctl reload nginx
+    #       # Reload Nginx to apply changes
+    #       sudo systemctl reload nginx
