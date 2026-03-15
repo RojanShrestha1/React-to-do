@@ -1,16 +1,17 @@
-name: React Static CI
+name: React Static CI/CD
 
 on:
   workflow_dispatch:
 
-
 jobs:
+
   build:
     runs-on: self-hosted
 
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -19,12 +20,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --verbose
 
-      - name: Build
+      - name: Build React App
         run: npm run build
         env:
-         CI: false
+          CI: false
 
       - name: Package build
         run: |
@@ -34,16 +35,18 @@ jobs:
         run: |
           curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
           --upload-file react-build-${{ github.sha }}.zip \
-          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip   
-         
-      - name: Upload build artifact
+          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip
+
+      - name: Upload build artifact (GitHub)
         uses: actions/upload-artifact@v4
         with:
-         name: cicd-react-app-production-${{ github.sha }}
-         path: build
+          name: react-build-${{ github.sha }}
+          path: build
+
 
   deploy:
     runs-on: self-hosted
+    needs: build
 
     steps:
 
@@ -51,27 +54,24 @@ jobs:
         run: |
           curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
           -o react-build.zip \
-          http://localhost:8081/repository/react-builds/react-build-${{ github.event.workflow_run.head_sha }}.zip
+          ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip
 
       - name: Extract artifact
         run: |
-         unzip react-build.zip
-         la -lah
+          unzip react-build.zip
+          ls -lah
 
-      # - name: Ensure target directory exists
-      #   run: sudo mkdir -p /var/www/react-app
+    #   - name: Ensure deployment directory exists
+    #     run: sudo mkdir -p /var/www/react-app
 
-      # - name: Clean old deployment
-      #   run: sudo rm -rf /var/www/react-app/*
+    #   - name: Clean old deployment
+    #     run: sudo rm -rf /var/www/react-app/*
 
-      # - name: Deploy build files
-      #   run: sudo cp -r build/* /var/www/react-app/
+    #   - name: Deploy build files
+    #     run: sudo cp -r build/* /var/www/react-app/
 
-      # - name: Set correct permissions
-      #   run: sudo chown -R www-data:www-data /var/www/react-app
+    #   - name: Set correct permissions
+    #     run: sudo chown -R www-data:www-data /var/www/react-app
 
-      # - name: Reload NGINX
-      #   run: sudo systemctl reload nginx
-
-
-         
+    #   - name: Reload NGINX
+    #     run: sudo systemctl reload nginx
