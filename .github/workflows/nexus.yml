@@ -56,6 +56,13 @@ jobs:
           -o react-build.zip \
           ${{ secrets.NEXUS_URL }}/repository/react-builds/react-build-${{ github.sha }}.zip
 
+
+      - name: Check downloaded file
+        run: |
+          ls -lah 
+          file react-build.zip
+          head react-build.zip
+
       - name: Extract artifact
         run: |
           unzip react-build.zip
