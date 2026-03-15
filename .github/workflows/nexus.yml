@@ -31,6 +31,10 @@ jobs:
         run: |
           zip -r react-build-${{ github.sha }}.zip build
 
+      - name: Debug URL
+        run: |
+         echo "Nexus URL: ${{ secrets.NEXUS_URL }}"
+
       - name: Upload to Nexus
         run: |
           curl -u ${{ secrets.NEXUS_USERNAME }}:${{ secrets.NEXUS_PASSWORD }} \
