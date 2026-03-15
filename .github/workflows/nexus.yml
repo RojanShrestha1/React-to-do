@@ -14,10 +14,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: npm
+          # Cache is removed here to prevent the 650MB timeout hang
 
       - name: Install dependencies
-        run: npm ci
+        # --prefer-offline uses the runner's local npm cache instead of downloading
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build React App
         run: npm run build
@@ -35,7 +36,7 @@ jobs:
           --upload-file react-build-${{ github.sha }}.zip \
           ${{ secrets.NEXUS_URL }}/react-build-${{ github.sha }}.zip
 
-      - name: Upload build artifact (GitHub backup)
+      - name: Upload build artifact (GitHub Backup)
         uses: actions/upload-artifact@v4
         with:
           name: react-build-${{ github.sha }}
@@ -51,19 +52,19 @@ jobs:
           -o react-build.zip \
           ${{ secrets.NEXUS_URL }}/react-build-${{ github.sha }}.zip
 
-    #   - name: Clean and Deploy
-    #     run: |
-    #       # 1. Create directory if missing
-    #       sudo mkdir -p /var/www/react-app
+      - name: Clean and Deploy to Nginx
+        run: |
+          # Create directory if it doesn't exist
+          sudo mkdir -p /var/www/react-app
           
-    #       # 2. Clear old files
-    #       sudo rm -rf /var/www/react-app/*
+          # Remove old files to ensure a clean slate
+          sudo rm -rf /var/www/react-app/*
           
-    #       # 3. Extract new files directly into target
-    #       sudo unzip react-build.zip -d /var/www/react-app/
+          # Extract zip directly into the target folder
+          sudo unzip react-build.zip -d /var/www/react-app/
           
-    #       # 4. Fix permissions for Nginx
-    #       sudo chown -R www-data:www-data /var/www/react-app
+          # Fix ownership for the web server (Nginx usually runs as www-data)
+          sudo chown -R www-data:www-data /var/www/react-app
           
-    #       # 5. Reload Nginx
-    #       sudo systemctl reload nginx
+          # Reload Nginx to apply changes
+          sudo systemctl reload nginx
