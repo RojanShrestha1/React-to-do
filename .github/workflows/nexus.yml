@@ -6,7 +6,7 @@ on:
 jobs:
 
   build:
-    runs-on: [self-hosted, macOS]
+    runs-on: [self-hosted, macOS, react-2-do]
 
     steps:
 
